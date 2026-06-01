@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 # 5. نسخ ملفات المشروع الأساسية فقط (المجلدات سيتم تحديدها عبر الهيكل المصفى)
 COPY app.py /app/
 COPY templates/ /app/templates/
-COPY static /app/static/
+# COPY static /app/static/
 # 6. فتح المنفذ (Port) الافتراضي لفلاسك
 EXPOSE 5000
 
