@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>منصة تصنيف وتخزين نماذج الذكاء الاصطناعي</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 40px; text-align: center; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px; transition: opacity 0.2s; }
+        button.action-btn { background-color: #2ecc71; color: white; }
+        button.train-btn { background-color: #3498db; color: white; width: 100%; margin-top: 15px; }
+        button.heartbeat-btn { background-color: #9b59b6; color: white; width: 100%; margin-top: 5px; margin-bottom: 15px; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        button:hover:not(:disabled) { opacity: 0.9; }
+        select, input[type="file"], input[type="number"] { padding: 10px; border: 1px solid #ccd0d5; border-radius: 5px; font-size: 15px; margin: 5px; }
+        .result { margin-top: 20px; font-size: 20px; color: #2c3e50; font-weight: bold; background: #e1f5fe; padding: 15px; border-radius: 5px; text-align: center; }
+        
+        /* الصناديق الجانبية وصناديق المعلومات */
+        .info-box { background-color: #e8f4f8; border-right: 5px solid #3498db; padding: 15px; text-align: right; margin: 20px 0; border-radius: 4px; }
+        .stats-box { background-color: #fff3e0; border-right: 5px solid #ff9800; padding: 15px; text-align: right; margin: 20px 0; border-radius: 4px; }
+        .stats-list { list-style-type: none; padding: 0; margin: 5px 0 0 0; }
+        .stats-list li { padding: 4px 0; border-bottom: 1px dashed #ffe0b2; }
+        .stats-list li:last-child { border-bottom: none; }
+        
+        .hyperparams-form { display: flex; gap: 10px; justify-content: center; margin: 15px 0; background: #fdfdfd; padding: 15px; border-radius: 6px; border: 1px dashed #cbd5e0; flex-wrap: wrap; }
+        .param-group { text-align: right; display: flex; flex-direction: column; width: 45%; min-width: 140px; }
+        .param-group label { font-size: 13px; font-weight: bold; color: #4a5568; margin-bottom: 5px; }
+
+        .progress-container { width: 100%; background-color: #e0e0e0; border-radius: 25px; margin: 20px 0; display: none; }
+        .progress-bar { width: 0%; height: 25px; background-color: #2ecc71; text-align: center; line-height: 25px; color: white; border-radius: 25px; font-weight: bold; transition: width 0.3s ease; }
+        
+        .stats-grid { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .stat-card { background: #fafafa; padding: 10px; border: 1px solid #eee; border-radius: 6px; }
+        .stat-val { font-size: 22px; font-weight: bold; color: #2e86de; }
+
+        .live-monitor-box { display: none; background: #fffde7; border: 1px solid #fbc02d; padding: 12px; border-radius: 6px; margin: 15px 0; text-align: right; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>مستودع ومستكشف الحيوانات الذكي 🦁</h1>
+    
+    <!-- صندوق معلومات النموذج المختار -->
+    <div class="info-box">
+        <label style="font-weight: bold;">🧠 اختر نموذجاً من الأرشيف لفحص الصور:</label> <br>
+        <select id="modelSelector" onchange="switchModel(this.value)" style="width: 100%; margin-top: 5px;">
+            {% if not models_list %}
+                <option value="">لا توجد نماذج مدربة حالياً، يرجى إنشاء نموذج بالأسفل</option>
+            {% endif %}
+            {% for m in models_list %}
+                <option value="{{ m }}" {% if m == selected_model %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+        <hr style="border: 0; border-top: 1px dashed #b2dfdb; margin: 10px 0;">
+        <strong>📊 حالة النموذج المختار:</strong> {{ model_info.status }} <br>
+        <strong>🐾 تدرب على عوائل:</strong> <span style="color: #1a237e; font-weight: bold;">[ {{ model_info.classes }} ]</span>
+    </div>
+
+    <!-- صندوق إحصائيات صور الـ Dataset لكل فئة -->
+    <div class="stats-box">
+        <strong style="color: #e65100;">📊 عدد الصور المتوفرة في قاعدة البيانات (Dataset) لكل فئة:</strong>
+        <ul class="stats-list">
+            {% if dataset_stats %}
+                {% for folder, count in dataset_stats.items() %}
+                    <li>🐾 الفئة <b>{{ folder }}</b>: تحتوي على <span style="color: #d84315; font-weight: bold;">{{ count }}</span> صورة.</li>
+                {% endfor %}
+            {% else %}
+                <li style="color: #757575;">⚠️ لا توجد مجلدات أو صور داخل مجلد التدريب حالياً.</li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <hr>
+    
+    <h3>🔍 اختبار صورة جديدة</h3>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="chosen_model" value="{{ selected_model }}">
+        <input type="file" name="file" accept="image/*" required>
+        <br><br>
+        <button type="submit" class="action-btn" {% if not selected_model %}disabled{% endif %}>إرسال وفحص الصورة</button>
+    </form>
+
+    {% if prediction %}
+        <div class="result">
+            🎯 النتيجة المتوقعة عبر النموذج المختار: <span style="color: #007bff;">{{ prediction }}</span>
+            
+            {% if show_feedback %}
+                <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; font-size: 15px; font-weight: normal; color: #333;">
+                    <p>💡 <b>هل النتيجة صحيحة؟ ساعد النموذج ليتعلم ويتحسن برمجياً:</b></p>
+                    
+                    <div style="display: inline-block;">
+                        <form action="/feedback" method="POST" style="display: inline-block; margin-right: 10px;">
+                            <input type="hidden" name="feedback_type" value="correct">
+                            <input type="hidden" name="predicted_class" value="{{ prediction }}">
+                            <button type="submit" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer;">نعم، صحيحة ✅</button>
+                        </form>
+                        <button onclick="document.getElementById('correction-box').style.display='block'" style="background: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer;">لا، خاطئة ❌</button>
+                    </div>
+
+                    <div id="correction-box" style="display: none; margin-top: 15px; background: #fff; padding: 15px; border: 1px solid #dc3545; border-radius: 5px;">
+                        <form action="/feedback" method="POST">
+                            <input type="hidden" name="feedback_type" value="incorrect">
+                            <input type="hidden" name="predicted_class" value="{{ prediction }}">
+                            
+                            <label for="correct_class">اختر المجلد الصحيح لهذه الصورة للتعلم منه:</label>
+                            <select name="correct_class" required style="padding: 5px; margin: 0 10px;">
+                                <option value="">-- اختر الفئة --</option>
+                                {% for cls in classes %}
+                                    <option value="{{ cls }}">{{ cls }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" style="background: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">حفظ وتصحيح العقل 🧠</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if feedback_msg %}
+        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-top: 20px; text-align: center; font-weight: bold;">
+            {{ feedback_msg }}
+        </div>
+    {% endif %}
+
+    <hr>
+
+    <h3>⚙️ تدريب نموذج جديد (إنتاج عقل منفصل)</h3>
+    <form action="/train" method="post" id="trainForm">
+        <div class="hyperparams-form" id="fieldsBlock">
+            <div class="param-group">
+                <label for="epochs">🔄 الجولات (Epochs):</label>
+                <input type="number" id="epochs" name="epochs" min="1" max="20" value="2" required>
+            </div>
+            
+            <div class="param-group">
+                <label for="batch_size">📦 الدفعة (Batch):</label>
+                <select id="batch_size" name="batch_size">
+                    <option value="4">4 (خفيف)</option>
+                    <option value="16" selected>16 (متوازن)</option>
+                    <option value="32">32 (ضخم)</option>
+                </select>
+            </div>
+
+            <div class="param-group" style="width: 95%; margin-top: 5px;">
+                <label for="img_size">⚡ دقة المعالجة والسرعة:</label>
+                <select id="img_size" name="img_size" style="padding: 10px; border-radius: 5px; background: #fffde7; border: 1px solid #fbc02d;">
+                    <option value="224">🎯 جودة قياسية (دقة عالية / سرعة عادية)</option>
+                    <option value="128" selected>🚀 جودة اقتصادية (سرعة مضاعفة 2x)</option>
+                    <option value="96">🔥 جودة منخفضة (أقصى سرعة خارقة 4x)</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="train-btn" id="trainBtn">بدء عملية تدريب النموذج الجديد</button>
+    </form>
+    
+    <button type="button" class="heartbeat-btn" id="heartbeatBtn" onclick="checkBackendHeartbeat()">
+        💓 فحص نبض التدريب (هل الباكند ما زال يعمل؟)
+    </button>
+    
+    <div class="live-monitor-box" id="liveMonitorBox">
+        📢 <b>يتم معالجته الآن برمجياً:</b><br>
+        📁 المجلد النشط: <span id="liveFolder" style="color: #bc5100; font-weight: bold;">-</span><br>
+        🖼️ اسم ملف الصورة: <span id="liveFile" style="color: #003f5c; font-weight: bold;">-</span>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div>🎯 دقة التعلم الحالية</div>
+            <div class="stat-val" id="statAcc">0%</div>
+        </div>
+        <div class="stat-card">
+            <div>📉 نسبة الخطأ (Loss)</div>
+            <div class="stat-val" id="statLoss" style="color: #e74c3c;">0.00</div>
+        </div>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    <div id="statusMessage" style="color: #27ae60; font-weight: bold; margin-top: 10px;"></div>
+</div>
+
+<script>
+    function switchModel(modelName) {
+        if (modelName) {
+            window.location.href = "/?selected_model=" + encodeURIComponent(modelName);
+        }
+    }
+
+    function checkProgress() {
+        fetch('/progress')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_training) {
+                    document.getElementById('fieldsBlock').style.opacity = '0.5';
+                    document.getElementById('progressContainer').style.display = 'block';
+                    document.getElementById('statsGrid').style.display = 'grid';
+                    document.getElementById('liveMonitorBox').style.display = 'block';
+                    document.getElementById('trainBtn').disabled = true;
+                    document.getElementById('trainBtn').innerText = 'جاري المعالجة والحفظ بالخلفية...';
+                    
+                    document.getElementById('progressBar').style.width = data.progress + '%';
+                    document.getElementById('progressBar').innerText = data.progress + '%';
+                    document.getElementById('statAcc').innerText = data.accuracy + '%';
+                    document.getElementById('statLoss').innerText = data.loss;
+                    document.getElementById('statusMessage').innerText = data.message;
+                    
+                    document.getElementById('liveFolder').innerText = data.current_folder;
+                    document.getElementById('liveFile').innerText = data.current_file;
+                    
+                    // إذا وصل التدريب إلى 100%، نقوم بعمل ريسيت وتحديث تلقائي للواجهة لتعمل التحديثات فوراً
+                    if (data.progress === 100) {
+                        document.getElementById('progressBar').style.width = '100%';
+                        document.getElementById('progressBar').innerText = '100%';
+                        
+                        fetch('/reset_training_status', { method: 'POST' })
+                            .then(() => {
+                                setTimeout(() => { window.location.href = "/"; }, 2000);
+                            });
+                        return;
+                    }
+                    setTimeout(checkProgress, 1000);
+                } else {
+                    if(document.getElementById('progressContainer').style.display !== 'block') {
+                        document.getElementById('fieldsBlock').style.opacity = '1';
+                        document.getElementById('trainBtn').disabled = false;
+                        document.getElementById('trainBtn').innerText = 'بدء عملية تدريب النموذج الجديد';
+                    }
+                }
+            }).catch(err => {
+                setTimeout(checkProgress, 2000);
+            });
+    }
+
+    function checkBackendHeartbeat() {
+        const btn = document.getElementById('heartbeatBtn');
+        btn.innerText = "جاري طلب رد من الباكند... ⏳";
+        btn.disabled = true;
+
+        fetch('/check_heartbeat', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert(`[تقرير حالة السيرفر]:\nالحالة العامة: ${data.alive ? 'نشط ويعمل 🟢' : 'متوقف أو منتهي ⚪'}\n\nالتفاصيل: ناصية التدريب حالياً في النسبة (${data.progress}%)`);
+                btn.innerText = "💓 فحص نبض التدريب (هل الباكند ما زال يعمل؟)";
+                btn.disabled = false;
+            })
+            .catch(err => {
+                alert("⚠️ خطأ: تعذر الاتصال بالسيرفر.");
+                btn.innerText = "💓 فحص نبض التدريب (هل الباكند ما زال يعمل؟)";
+                btn.disabled = false;
+            });
+    }
+
+    window.onload = function() {
+        checkProgress();
+    };
+
+    document.getElementById('trainForm').onsubmit = function() {
+        document.getElementById('trainBtn').disabled = true;
+        setTimeout(checkProgress, 500);
+    };
+</script>
+</body>
+</html>
