@@ -1,5 +1,6 @@
 import os
 import threading
+import torch.nn.functional as F
 import datetime
 import shutil
 import torch
@@ -100,10 +101,10 @@ def predict():
         img_path = os.path.join(UPLOAD_FOLDER, 'last_tested_image.jpg')
         file.save(img_path)
         
-        state_dict = torch.load(chosen_model, map_location=torch.device('cpu'))
+        # إضافة weights_only=True لتجنب التحذيرات الأمنية
+        state_dict = torch.load(chosen_model, map_location=torch.device('cpu'), weights_only=True)
         num_classes = state_dict['classifier.1.weight'].shape[0]
         
-        # قراءة الأبعاد ديناميكياً لتجنب مشاكل المعالجة
         input_features = state_dict['features.0.0.weight'].shape[2] if 'features.0.0.weight' in state_dict else 224
         
         model = models.mobilenet_v2(weights=None)
@@ -117,7 +118,10 @@ def predict():
         
         with torch.no_grad():
             outputs = model(img_t)
-            _, predicted_idx = torch.max(outputs, 1)
+            # --- تعديل: حساب الاحتمالات ونسبة التأكد ---
+            probs = F.softmax(outputs, dim=1)
+            confidence, predicted_idx = torch.max(probs, 1)
+            # ----------------------------------------
             
         current_classes = get_classes()
         if predicted_idx.item() < len(current_classes):
@@ -125,9 +129,12 @@ def predict():
         else:
             result = f"الفئة رقم {predicted_idx.item()}"
             
-        # نمرر فقط المتغيرات الناتجة عن التنبؤ، والمتغيرات العامة يضخها الـ context_processor تلقائياً
+        # تحويل نسبة التأكد إلى نص مئوي (مثلاً: 98.50%)
+        conf_score = f"{confidence.item() * 100:.2f}%"
+            
         return render_template('index.html', 
                                prediction=result, 
+                               confidence=conf_score, # إرسال نسبة التأكد
                                show_feedback=True,
                                training=training_status,
                                classes=classes)

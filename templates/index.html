@@ -82,7 +82,7 @@
 
     {% if prediction %}
         <div class="result">
-            🎯 النتيجة المتوقعة عبر النموذج المختار: <span style="color: #007bff;">{{ prediction }}</span>
+            🎯 النتيجة المتوقعة عبر النموذج المختار: <span style="color: #007bff;">{{ prediction }} <span style="color: #007bff;">نسبة التأكد: {{ confidence }}</span></span>
             
             {% if show_feedback %}
                 <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; font-size: 15px; font-weight: normal; color: #333;">
