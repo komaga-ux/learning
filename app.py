@@ -39,9 +39,10 @@ def get_transform_predict(img_size=224):
     ])
 
 def get_available_models():
-    if not os.path.exists('.'):
-        return []
-    files = os.listdir('.')
+    # تأكد من أن المسار هو المجلد الرئيسي للتطبيق
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    files = os.listdir(current_dir)
+    # البحث عن ملفات .pth
     model_files = [f for f in files if f.endswith('.pth')]
     return sorted(model_files, reverse=True)
 
