@@ -75,13 +75,6 @@ def get_selected_model_info(model_name):
     except Exception as e:
         return {"status": "خطأ في قراءة ملف النموذج ⚠️", "classes": "غير معروف"}
 
-# تأكد من هذا المسار في app.py
-@app.route('/get_file/<filename>')
-def get_file(filename):
-    # التأكد من المسار الصحيح للملفات في المجلد الرئيسي
-    if filename in ['python.txt', 'html.txt']:
-        return send_file(filename)
-    return "الملف غير موجود", 404
 
 @app.route('/')
 def index():
@@ -148,6 +141,14 @@ def predict():
                                classes=classes)
         
     return redirect('/')
+
+# تأكد من هذا المسار في app.py
+@app.route('/get_file/<filename>')
+def get_file(filename):
+    # التأكد من المسار الصحيح للملفات في المجلد الرئيسي
+    if filename in ['python.txt', 'html.txt']:
+        return send_file(filename)
+    return "الملف غير موجود", 404
 
 @app.route('/feedback', methods=['POST'])
 def feedback():

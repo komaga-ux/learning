@@ -247,3 +247,11 @@ button:hover:not(:disabled) { opacity: 0.9; }
     border-radius: 5px;
     overflow-x: auto;
 }
+
+.footer-credit {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 0.5px;
+}
+.footer-credit b {
+    color: #3498db; /* لون مميز لاسمك */
+}
