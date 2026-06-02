@@ -3,11 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>منصة تصنيف وتخزين نماذج الذكاء الاصطناعي</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 40px; text-align: center; }
         .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
@@ -51,53 +46,63 @@
 
 
 <script>
-function showFile(type) {
-    if (type === 'home') {
-        window.location.href = "/"; 
-        return;
-    }
-    
-    const fileName = (type === 'html') ? 'html.txt' : 'python.txt';
-    const langClass = (type === 'html') ? 'language-markup' : 'language-python';
-    
-    fetch('/get_file/' + fileName)
-        .then(response => response.text())
-        .then(data => {
-            const codeElement = document.getElementById('codeContent');
-            
-            // 1. مسح الكلاسات القديمة وإضافة الجديدة
-            codeElement.className = langClass;
-            
-            // 2. وضع النص
-            codeElement.textContent = data;
-            
-            // 3. تلوين الكود
-            Prism.highlightElement(codeElement);
-            
-            // 4. إظهار الصندوق
-            document.getElementById('fileModal').style.display = 'block';
-        })
-        .catch(err => alert("تعذر تحميل الملف"));
-}
-
-function closeModal() {
-        document.getElementById('fileModal').style.display = 'none';
-    }
-
-    // غلق الصندوق عند الضغط خارج منطقة المحتوى
-    window.onclick = function(event) {
-        let modal = document.getElementById('fileModal');
-        if (event.target == modal) {
-            modal.style.display = 'none';
+    // دالة عرض الملفات
+    function showFile(type) {
+        if (type === 'home') {
+            window.location.href = "/"; 
+            return;
         }
+        
+        const fileName = (type === 'html') ? 'html.txt' : 'python.txt';
+        console.log('fileName',fileName)
+        // نستخدم المسار الجديد الذي أنشأناه في app.py
+        fetch('/get_file/' + fileName)
+            .then(response => {
+                if (!response.ok) throw new Error('الملف غير موجود');
+                return response.text();
+            })
+            .then(data => {
+                console.log(data)
+                document.getElementById('codeContent').innerText = data;
+            })
+            .catch(err => {
+                document.getElementById('codeContent').innerText = "خطأ: " + err.message;
+            });
     }
+
+    // دالة تبديل النموذج
+    function switchModel(modelName) {
+        if (modelName) { window.location.href = "/?selected_model=" + encodeURIComponent(modelName); }
+    }
+
+    // دالة فحص التقدم
+    function checkProgress() {
+        fetch('/progress')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_training) {
+                    // ... (باقي كود الـ UI الخاص بالتقدم كما هو في ملفك)
+                    setTimeout(checkProgress, 1000);
+                }
+            });
+    }
+
+    // دالة فحص النبض
+    function checkBackendHeartbeat() {
+        fetch('/check_heartbeat', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => alert(data.message));
+    }
+
+    window.onload = function() { checkProgress(); };
 </script>
 
-<!-- <div id="codeViewer" style="background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; text-align: left; overflow-x: auto; margin-bottom: 20px;">
+
+<div id="codeViewer" style="background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; text-align: left; overflow-x: auto; margin-bottom: 20px;">
     <pre id="codeContent">
 اختر ملفاً لعرض محتواه
     </pre>
-</div> -->
+</div>
 <div class="container">
     <h1>مستودع ومستكشف الحيوانات الذكي 🦁</h1>
     
@@ -322,37 +327,5 @@ function closeModal() {
         setTimeout(checkProgress, 500);
     };
 </script>
-
-<div id="fileModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h3>محتوى الملف</h3>
-        <pre><code id="codeContent" class="language-python"></code></pre>
-    </div>
-</div>
-
-    <script>
-        // دالة عرض الملفات المحدثة
-        function showFile(type) {
-            if (type === 'home') {
-                window.location.href = "/"; 
-                return;
-            }
-            const fileName = (type === 'html') ? 'html.txt' : 'python.txt';
-            
-            fetch('/get_file/' + fileName)
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('codeContent').innerText = data;
-                    document.getElementById('fileModal').style.display = 'block'; // إظهار الصندوق
-                })
-                .catch(err => alert("تعذر تحميل الملف"));
-        }
-
-        function closeModal() {
-            document.getElementById('fileModal').style.display = 'none';
-        }
-    </script>
-
 </body>
 </html>

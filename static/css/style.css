@@ -1,0 +1,249 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f6;
+    margin: 40px;
+    text-align: center;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 10px;
+    transition: opacity 0.2s;
+}
+
+button.action-btn {
+    background-color: #2ecc71;
+    color: white;
+}
+
+button.train-btn {
+    background-color: #3498db;
+    color: white;
+    width: 100%;
+    margin-top: 15px;
+}
+
+button.heartbeat-btn {
+    background-color: #9b59b6;
+    color: white;
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+select,
+input[type="file"],
+input[type="number"] {
+    padding: 10px;
+    border: 1px solid #ccd0d5;
+    border-radius: 5px;
+    font-size: 15px;
+    margin: 5px;
+}
+
+.result {
+    margin-top: 20px;
+    font-size: 20px;
+    color: #2c3e50;
+    font-weight: bold;
+    background: #e1f5fe;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.info-box {
+    background-color: #e8f4f8;
+    border-right: 5px solid #3498db;
+    padding: 15px;
+    text-align: right;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.stats-box {
+    background-color: #fff3e0;
+    border-right: 5px solid #ff9800;
+    padding: 15px;
+    text-align: right;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.stats-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 5px 0 0 0;
+}
+
+.stats-list li {
+    padding: 4px 0;
+    border-bottom: 1px dashed #ffe0b2;
+}
+
+.stats-list li:last-child {
+    border-bottom: none;
+}
+
+.hyperparams-form {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+    background: #fdfdfd;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e0;
+    flex-wrap: wrap;
+}
+
+.param-group {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+    min-width: 140px;
+}
+
+.param-group label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #4a5568;
+    margin-bottom: 5px;
+}
+
+.progress-container {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 25px;
+    margin: 20px 0;
+    display: none;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 25px;
+    background-color: #2ecc71;
+    text-align: center;
+    line-height: 25px;
+    color: white;
+    border-radius: 25px;
+    font-weight: bold;
+    transition: width 0.3s ease;
+}
+
+.stats-grid {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.stat-card {
+    background: #fafafa;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+}
+
+.stat-val {
+    font-size: 22px;
+    font-weight: bold;
+    color: #2e86de;
+}
+
+.live-monitor-box {
+    display: none;
+    background: #fffde7;
+    border: 1px solid #fbc02d;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* التصميم الأساسي */
+body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 40px; text-align: center; }
+.container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px; transition: opacity 0.2s; }
+button.action-btn { background-color: #2ecc71; color: white; }
+button.train-btn { background-color: #3498db; color: white; width: 100%; margin-top: 15px; }
+button.heartbeat-btn { background-color: #9b59b6; color: white; width: 100%; margin-top: 5px; margin-bottom: 15px; }
+button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+button:hover:not(:disabled) { opacity: 0.9; }
+
+/* عرض الملفات (Code Viewer) */
+.file-nav { margin-bottom: 20px; }
+.code-viewer { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; text-align: left; overflow-x: auto; margin-bottom: 20px; }
+/* ... أضف هنا باقي كود الـ CSS القديم ... */
+/* الصندوق العائم */
+.modal {
+    display: none; /* مخفي افتراضياً */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); /* خلفية معتمة */
+}
+
+.modal-content {
+    background-color: #272822;
+    color: #f8f8f2;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 700px;
+    max-height: 70%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close-btn {
+    color: #aaa;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#codeContent {
+    direction: ltr;           /* لضمان أن الكود يُقرأ من اليسار لليمين */
+    text-align: left;         /* محاذاة النص لليسار */
+    display: block;           /* مهم جداً لـ Prism */
+    white-space: pre;         /* الحفاظ على المسافات والـ Indentation */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* تنسيق إضافي للصندوق لضمان احتواء الألوان */
+.modal-content pre {
+    background: #2d2d2d !important; /* خلفية متناسقة */
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
