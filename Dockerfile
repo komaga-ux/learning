@@ -20,9 +20,10 @@
 
 
 FROM python:3.12-slim
+
 WORKDIR /app
 
-# تثبيت مكتبات النظام اللازمة لـ OpenCV و PyTorch
+# تثبيت مكتبات النظام اللازمة
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libglib2.0-0 \
@@ -31,13 +32,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# تثبيت المتطلبات من الملف مباشرة (أسرع وأكثر تنظيماً)
+# تحديث pip وتثبيت gunicorn بشكل صريح لضمان وجوده في المسار
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir gunicorn
+
+# تثبيت باقي المتطلبات
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# نسخ كود المشروع (بما في ذلك ملفات النموذج .prototxt و .caffemodel)
+# إضافة المسار الافتراضي للمكتبات
+ENV PATH="/usr/local/bin:${PATH}"
+
 COPY . .
 
-# استخدام gunicorn للإنتاج
-CMD gunicorn --bind 0.0.0.0:$PORT --timeout 600 app:app
+# استخدام المسار الكامل لـ gunicorn
+CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:10000", "--timeout", "600", "app:app"]
