@@ -203,7 +203,7 @@
 <body>
     <nav class="file-nav">
         <button onclick="showFile('home')">🏠 الصفحة الرئيسية</button>
-
+        <button onclick="openCamera()">🎥 مراقبة الكاميرا الحية</button>
         <button onclick="showFile('html')">📄 عرض HTML</button>
         <button onclick="showFile('python')">🐍 عرض Python</button>
     </nav>
@@ -259,7 +259,6 @@
 </div> -->
     <div class="container">
         <h1>مستودع ومستكشف الحيوانات الذكي 🦁</h1>
-ksadfjlsadl;jfkadsl;fjksa;fjkl
         <!-- صندوق معلومات النموذج المختار -->
         <div class="info-box">
             <label style="font-weight: bold;">🧠 اختر نموذجاً من الأرشيف لفحص الصور:</label> <br>
@@ -530,6 +529,25 @@ ksadfjlsadl;jfkadsl;fjksa;fjkl
     <div class="container">
     </div>
 
+    <div id="cameraPopup"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; text-align:center; padding-top:50px;">
+        <button onclick="closeCamera()"
+            style="position:absolute; top:20px; right:20px; padding:10px 20px; background:red; color:white; border:none; cursor:pointer;">إغلاق
+            X</button>
+        <h2 style="color:white;">البث المباشر مع كشف العناصر</h2>
+        <img id="videoStream" src="" width="70%" style="border: 5px solid #fff; border-radius: 10px;">
+    </div>
+
+    <script>
+        function openCamera() {
+            document.getElementById('cameraPopup').style.display = 'block';
+            document.getElementById('videoStream').src = "{{ url_for('video_feed') }}";
+        }
+        function closeCamera() {
+            document.getElementById('cameraPopup').style.display = 'none';
+            document.getElementById('videoStream').src = ""; // إيقاف البث عند الإغلاق
+        }
+    </script>
     <footer style="margin-top: 40px; padding: 20px; text-align: center; color: #7f8c8d;">
         <p>صُمم وطُوّر بكل فخر بواسطة: <b>خليل العمري</b></p>
     </footer>

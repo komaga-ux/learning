@@ -8,7 +8,11 @@ import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
-from flask import Flask, request, render_template, redirect, jsonify, send_file
+from flask import Flask, request, render_template, redirect, jsonify, send_file,Response
+import cv2
+import numpy as np
+
+
 
 # إجبار البرنامج على العمل بالمعالج (CPU) لمنع مشاكل الـ DLL واستهلاك الذاكرة
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -395,6 +399,55 @@ def inject_global_model_vars():
         selected_model=selected_model,
         model_info=model_info
     )
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# تحديد مسارات النماذج
+proto_path = os.path.join(base_dir, "MobileNetSSD_deploy.prototxt")
+model_path = os.path.join(base_dir, "MobileNetSSD_deploy.caffemodel")
+
+# قراءة النموذج
+net = cv2.dnn.readNetFromCaffe(proto_path, model_path)
+
+CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+
+# net = cv2.dnn.readNetFromCaffe("MobileNetSSD_deploy.prototxt", "MobileNetSSD_deploy.caffemodel")
+
+def generate_frames():
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = cap.read()
+        if not ret: break
+        
+        # معالجة الصورة للكشف عن العناصر
+        (h, w) = frame.shape[:2]
+        blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
+        net.setInput(blob)
+        detections = net.forward()
+
+        for i in range(detections.shape[2]):
+            confidence = detections[0, 0, i, 2]
+            if confidence > 0.5: # نسبة ثقة فوق 50%
+                idx = int(detections[0, 0, i, 1])
+                box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+                (startX, startY, endX, endY) = box.astype("int")
+                
+                # رسم المربع والنص
+                label = f"{CLASSES[idx]}: {confidence*100:.2f}%"
+                cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
+                cv2.putText(frame, label, (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+@app.route('/camera_page')
+def camera_page():
+    return render_template('camera.html')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
     # يقرأ البورت من السيرفر، وإذا لم يجده (محلياً) يشتغل على 5000
