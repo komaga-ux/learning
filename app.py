@@ -11,8 +11,7 @@ from PIL import Image
 from flask import Flask, request, render_template, redirect, jsonify, send_file,Response
 import cv2
 import numpy as np
-
-
+from deepface import DeepFace
 
 # إجبار البرنامج على العمل بالمعالج (CPU) لمنع مشاكل الـ DLL واستهلاك الذاكرة
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -441,6 +440,29 @@ def generate_frames():
         frame = buffer.tobytes()
         yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
+@app.route('/video_emotion_feed')
+def video_emotion_feed():
+    return Response(generate_frames_emotion(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# الدالة الجديدة التي أرسلتها مع تعديل بسيط لتكون مستقلة
+def generate_frames_emotion():
+    cap = cv2.VideoCapture(0)
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    while True:
+        ret, frame = cap.read()
+        if not ret: break
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+        for (x, y, w, h) in faces:
+            face_img = frame[y:y+h, x:x+w]
+            try:
+                analysis = DeepFace.analyze(face_img, actions=['emotion'], enforce_detection=False)
+                emotion = analysis[0]['dominant_emotion']
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+            except: pass
+        _, buffer = cv2.imencode('.jpg', frame)
+        yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 @app.route('/camera_page')
 def camera_page():
     return render_template('camera.html')

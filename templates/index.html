@@ -204,6 +204,7 @@
     <nav class="file-nav">
         <button onclick="showFile('home')">🏠 الصفحة الرئيسية</button>
         <button onclick="openCamera()">🎥 مراقبة الكاميرا الحية</button>
+        <button onclick="openCamera('emotion')">🎭 تحليل المشاعر المباشر</button>
         <button onclick="showFile('html')">📄 عرض HTML</button>
         <button onclick="showFile('python')">🐍 عرض Python</button>
     </nav>
@@ -546,6 +547,28 @@
         function closeCamera() {
             document.getElementById('cameraPopup').style.display = 'none';
             document.getElementById('videoStream').src = ""; // إيقاف البث عند الإغلاق
+        }
+    </script>
+
+    <div id="cameraPopup"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; text-align:center; padding-top:50px;">
+        <button onclick="closeCamera()"
+            style="position:absolute; top:20px; right:20px; padding:10px 20px; background:red; color:white; border:none; cursor:pointer;">إغلاق
+            X</button>
+        <img id="videoStream" src="" width="70%" style="border: 5px solid #fff; border-radius: 10px;">
+    </div>
+
+    <script>
+        function openCamera(type) {
+            document.getElementById('cameraPopup').style.display = 'block';
+            // اختيار المسار بناءً على النوع
+            const url = (type === 'emotion') ? "{{ url_for('video_emotion_feed') }}" : "{{ url_for('video_feed') }}";
+            document.getElementById('videoStream').src = url;
+        }
+
+        function closeCamera() {
+            document.getElementById('cameraPopup').style.display = 'none';
+            document.getElementById('videoStream').src = ""; // إيقاف الكاميرا فوراً
         }
     </script>
     <footer style="margin-top: 40px; padding: 20px; text-align: center; color: #7f8c8d;">
