@@ -19,8 +19,7 @@
 
 
 
-FROM python:3.10-slim
-
+FROM python:3.12-slim
 WORKDIR /app
 
 # تثبيت مكتبات النظام اللازمة لـ OpenCV و PyTorch
