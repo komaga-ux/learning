@@ -23,19 +23,21 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# تثبيت المكتبات الأساسية التي يحتاجها OpenCV
+# تحديث وتثبيت مكتبات النظام المطلوبة لـ OpenCV و DeepFace
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# تثبيت باقي المتطلبات
+# تثبيت gunicorn والمكتبات
 RUN pip install --no-cache-dir --upgrade pip gunicorn
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# إضافة المسار وتجهيز التشغيل
 ENV PATH="/usr/local/bin:${PATH}"
 COPY . .
 
