@@ -18,20 +18,30 @@
 # CMD gunicorn --bind 0.0.0.0:$PORT --timeout 600 app:app
 
 
-
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# تثبيت كافة مكتبات النظام المطلوبة لـ OpenCV و DeepFace
+# تثبيت كافة مكتبات النظام المطلوبة لـ OpenCV و DeepFace و X11
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgl1 \
     libglib2.0-0 \
     libx11-6 \
     libxcb1 \
-    libxau6 \
-    libxdmcp6 \
+    libxcb-shm0 \
+    libxcb-render0 \
+    libxcb-render-util0 \
+    libxcb-xfixes0 \
+    libxcb-shape0 \
+    libxcb-randr0 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-icccm4 \
+    libxcb-sync1 \
+    libxcb-xinerama0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip gunicorn
@@ -42,5 +52,4 @@ ENV PATH="/usr/local/bin:${PATH}"
 COPY . .
 
 CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:10000", "--timeout", "600", "app:app"]
-
 # c983b35
