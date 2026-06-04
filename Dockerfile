@@ -51,5 +51,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV PATH="/usr/local/bin:${PATH}"
 COPY . .
 
-CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:10000", "--timeout", "600", "app:app"]
+CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:$PORT", "--timeout", "600", "app:app"]
+# استبدل سطر CMD الحالي بهذا السطر:
+CMD gunicorn --bind 0.0.0.0:$PORT --timeout 600 app:app
 # c983b35
